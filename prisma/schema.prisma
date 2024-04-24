@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model profiles {
+  id          Int     @id @default(autoincrement()) @db.UnsignedInt
+  bio         String? @db.Text
+  description String? @db.Text
+  user_id     Int?    @unique(map: "profiles_un_user_id") @db.UnsignedInt
+  users       users?  @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "profiles_users_FK")
+}
+
+model roles {
+  id          Int           @id @default(autoincrement()) @db.UnsignedInt
+  name        String        @db.VarChar(150)
+  users_roles users_roles[]
+}
+
+model users {
+  id            Int           @id @default(autoincrement()) @db.UnsignedInt
+  first_name    String        @db.VarChar(150)
+  last_name     String?       @db.VarChar(150)
+  email         String        @unique(map: "users_un_email") @db.VarChar(100)
+  password_hash String        @unique(map: "users_un_password") @db.VarChar(100)
+  created_at    DateTime      @default(now()) @db.DateTime(0)
+  update_at     DateTime      @default(now()) @db.DateTime(0)
+  salary        Decimal?      @db.Decimal(15, 2)
+  profiles      profiles?
+  users_roles   users_roles[]
+}
+
+model users_roles {
+  user_id    Int      @db.UnsignedInt
+  role_id    Int      @db.UnsignedInt
+  created_at DateTime @default(now()) @db.DateTime(0)
+  update_at  DateTime @default(now()) @db.DateTime(0)
+  roles      roles    @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "users_roles_roles_FK")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "users_roles_users_FK")
+
+  @@id([user_id, role_id])
+  @@index([role_id], map: "users_roles_roles_FK")
+}
